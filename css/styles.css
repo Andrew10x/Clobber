@@ -1,0 +1,23 @@
+﻿body {
+    /* box-sizing: border-box;*/
+}
+
+.field {
+    width: 400px;
+    height: 480px;
+    margin: 40px auto;
+    border: 4px solid black;
+    box-shadow: 0 0 5px black;
+}
+
+.sell {
+    background-color: bisque;
+    width: 80px;
+    height: 80px;
+    float: left;
+}
+
+.cell-img {
+    width: 80px;
+    height: 80px;
+}
