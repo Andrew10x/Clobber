@@ -188,7 +188,7 @@ function move(x, y) {
 // ходит компьютер
 function computer() {
 
-    if (number_of_black_moves < 7) {
+    if (number_of_black_moves < 5) {
         let flag = false;
         number_of_black_moves++;
         for (let i = 0; i < 10; i++) {
@@ -319,8 +319,8 @@ class Node {
         this.state = state;
         this.children = [];
         this.value = 0; //
-        this.alpha = -10;
-        this.beta = 10;
+        this.alpha = -100;
+        this.beta = 100;
     }
 }
 
@@ -335,14 +335,14 @@ class Tree {
     // state это массив
 
     create_tree(state) {
-
+        const depth = 4;
         this.root = new Node(state);
-        this.find_child(state, this.root, false);
-        this.alpha_beta(this.root, false, this.root.alpha, this.root.beta);
+        this.find_child(state, this.root, false, depth);
+        this.alpha_beta(this.root, false, this.root.alpha, this.root.beta, depth);
 
     }
 
-    find_child(state, cur_node, fut_my_turn) {
+    find_child(state, cur_node, fut_my_turn, depth) {
 
         let obj = {
             x1: null,
@@ -359,14 +359,14 @@ class Tree {
                     if (i + 1 < i_l && state[i + 1][j] != state[i][j] && state[i + 1][j] != 0) {
                         obj.x1 = i; obj.y1 = j; obj.x2 = i + 1; obj.y2 = j;
                         let new_node = this.create_children(obj, state, cur_node, fut_my_turn);
-
-                        this.find_child(new_node.state, new_node, !fut_my_turn);
+                        if(depth)
+                        this.find_child(new_node.state, new_node, !fut_my_turn, depth - 1);
                     }
                     else if (j + 1 < j_l && state[i][j + 1] != state[i][j] && state[i][j + 1] != 0) {
                         obj.x1 = i; obj.y1 = j; obj.x2 = i; obj.y2 = j + 1;
                         let new_node = this.create_children(obj, state, cur_node, fut_my_turn);
-
-                        this.find_child(new_node.state, new_node, !fut_my_turn);
+                        if(depth)
+                        this.find_child(new_node.state, new_node, !fut_my_turn, depth -1);
                     }
                 }
             }
@@ -411,17 +411,32 @@ class Tree {
     }
 
     //если я играю белыми - хожу первым //alpha & beta от родителей
-    alpha_beta(cur_node, fut_my_turn, alpha, beta) {
-        if (cur_node.children.length === 0) {
+    alpha_beta(cur_node, fut_my_turn, alpha, beta, depth) {
+        if (cur_node.children.length === 0 && this.estimate(cur_node.state, 1) == 0) {
             if (fut_my_turn) {
-                cur_node.alpha = -1; cur_node.beta = beta;
-                cur_node.value = -1;
-                return -1;
+                cur_node.alpha = -50; cur_node.beta = beta;
+                cur_node.value = -50;
+                return -50;
             }
             else {
-                cur_node.beta = 1; cur_node.alpha = alpha;
-                cur_node.value = 1;
-                return 1;
+                cur_node.beta = 50; cur_node.alpha = alpha;
+                cur_node.value = 50;
+                return 50;
+            }
+        }
+
+        if (depth == 0) {
+            if (fut_my_turn) {
+                let est = -this.estimate(cur_node.state, 1);
+                cur_node.alpha = est; cur_node.beta = beta;
+                cur_node.value = est;
+                return est;
+            }
+            else {
+                let est = this.estimate(cur_node.state, -1);
+                cur_node.beta = est; cur_node.alpha = alpha;
+                cur_node.value = est;
+                return est;
             }
         }
 
@@ -429,9 +444,9 @@ class Tree {
         cur_node.alpha = alpha;
         cur_node.beta = beta;
         if (fut_my_turn) {
-            let max_eval = -10;
+            let max_eval = -100;
             for (let i = 0; i < cur_node.children.length; i++) {
-                my_eval = this.alpha_beta(cur_node.children[i], !fut_my_turn, cur_node.alpha, cur_node.beta);
+                my_eval = this.alpha_beta(cur_node.children[i], !fut_my_turn, cur_node.alpha, cur_node.beta, depth - 1);
                 max_eval = Math.max(my_eval, max_eval);
 
                 cur_node.alpha = Math.max(cur_node.alpha, my_eval);
@@ -441,9 +456,9 @@ class Tree {
             return max_eval;
         }
         else {
-            let min_eval = 10;
+            let min_eval = 100;
             for (let i = 0; i < cur_node.children.length; i++) {
-                my_eval = this.alpha_beta(cur_node.children[i], !fut_my_turn, cur_node.alpha, cur_node.beta);
+                my_eval = this.alpha_beta(cur_node.children[i], !fut_my_turn, cur_node.alpha, cur_node.beta, depth - 1);
                 min_eval = Math.min(my_eval, min_eval);
 
                 cur_node.beta = Math.min(cur_node.beta, my_eval);
@@ -459,6 +474,26 @@ class Tree {
             if (this.root.beta == this.root.children[i].alpha)
                 return this.root.children[i].state;
         }
+    }
+
+    estimate(state, fig_type) {
+        let k = 0;
+        for (let i = 0; i < i_l; i++) {
+            for (let j = 0; j < j_l; j++) {
+                if (state[i][j] == fig_type) {
+
+                    if (i - 1 >= 0 && state[i - 1][j] == -fig_type)
+                        k++;
+                    if (i + 1 < i_l && state[i + 1][j] == -fig_type)
+                        k++;
+                    if (j - 1 >= 0 && state[i][j - 1] == -fig_type)
+                        k++;
+                    if (j + 1 < j_l && state[i][j + 1] == -fig_type)
+                        k++;
+                }
+            }
+        }
+        return k;
     }
 }
 
