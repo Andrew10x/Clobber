@@ -1,6 +1,7 @@
 ﻿'use strict';
 
 const comp_btn = document.getElementById('comp_btn');
+const conf_btn = document.getElementById('conf_button');
 
 comp_btn.onclick = computer;
 
@@ -9,12 +10,20 @@ for (let i = 0; i < 6; i++)
     field_arr[i] = new Array(5);
 
 let number_of_black_moves = 0;
+let in_number_of_moves = 5;
 let my_turn = true;
 let selected = false;
 let first_sel = {
     x: -1,
     y: -1
 };
+
+conf_btn.onclick = function () {
+    const rad = document.getElementsByName('radio');
+    if (rad[0].checked) in_number_of_moves = 10;
+    else if (rad[1].checked) in_number_of_moves = 5;
+    else if (rad[2].checked) in_number_of_moves = 2;
+}
 
 function draw_field() {
     let field = document.querySelector('.field');
@@ -64,10 +73,8 @@ function clicked(i, j) {
     if(my_turn)
     toggle(i, j);
 
-
-
-
 }
+
 
 
 function toggle(x, y) {
@@ -188,7 +195,8 @@ function move(x, y) {
 // ходит компьютер
 function computer() {
 
-    if (number_of_black_moves < 5) {
+    if (my_turn) return;
+    if (number_of_black_moves < in_number_of_moves) {
         let flag = false;
         number_of_black_moves++;
         for (let i = 0; i < 10; i++) {
@@ -202,13 +210,24 @@ function computer() {
         if (!extra_rand_moves()) alert(`White's won!!!`);
     }
     else {
-        alert("Danger");
         let our_tree = new Tree();
         let in_state = obj_to_arr();
+
+        if (our_tree.estimate(in_state, 1) == 0) {
+            alert(`White's won!!!`);
+            return;
+        }
+
         our_tree.create_tree(in_state);
 
         let best_move = our_tree.get_best_move_arr(); //сделать проверку, что это не терминальное состояние
         make_move(in_state, best_move);
+
+        if (our_tree.estimate(best_move, 1) == 0) {
+            alert(`Black's won!!!`);
+            return;
+        }
+
     }
 }
 
@@ -537,14 +556,3 @@ function make_move(beg_state, end_state) {
     toggle(x1, y1);
     toggle(x2, y2);
 }
-
-//let in_state = [[1, 0, -1],
-//[-1, 0, 1],
-//[1, -1, -1]];
-
-//let in_state = [[1, -1, 1], [1, 0, 0], [0, 0, 0]];
-
-//let our_tree = new Tree();
-//our_tree.create_tree(in_state);
-//console.log(our_tree);
-
